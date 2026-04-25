@@ -34,9 +34,20 @@ export const AuthPage = ({ mode }) => {
 
   return (
     <main className="auth-page">
-      <form className="panel form-panel" onSubmit={handleSubmit}>
-        <p className="eyebrow">{isRegister ? "Create Account" : "Welcome Back"}</p>
-        <h2>{isRegister ? "Join the placement portal" : "Sign in to continue"}</h2>
+      <section className="auth-brand-header">
+        <div className="auth-logo-badge" aria-hidden="true">
+          PP
+        </div>
+        <div>
+          <p className="eyebrow">Placement Portal</p>
+          <h2>{isRegister ? "Create your profile and get started" : "Welcome back to your placement workspace"}</h2>
+          <p className="auth-brand-copy">
+            AI-powered readiness insights, company matching, and interview guidance in one place.
+          </p>
+        </div>
+      </section>
+      <form className="auth-form-panel auth-form-standalone" onSubmit={handleSubmit}>
+        <h3>{isRegister ? "Create your account" : "Sign in to your account"}</h3>
         {error ? <p className="error-text">{error}</p> : null}
         {isRegister && (
           <label>
@@ -66,7 +77,7 @@ export const AuthPage = ({ mode }) => {
             required
           />
         </label>
-        <button type="submit" className="primary-button">
+        <button type="submit" className="primary-button auth-submit">
           {isRegister ? "Create Account" : "Login"}
         </button>
       </form>
