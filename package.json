@@ -1,0 +1,17 @@
+{
+  "name": "ai-placement-preparation-portal",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev:client": "npm --workspace client run dev",
+    "dev:server": "npm --workspace server run dev",
+    "start:client": "npm --workspace client run dev",
+    "start:server": "npm --workspace server run start",
+    "seed": "npm --workspace server run seed"
+  }
+}
+
