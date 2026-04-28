@@ -192,10 +192,24 @@ h1 {
   color: #2f4b86;
 }
 
+.ghost-button.is-active {
+  background: rgba(53, 109, 255, 0.2);
+  border-color: rgba(53, 109, 255, 0.5);
+  color: #173a80;
+}
+
 .primary-button:hover,
 .ghost-button:hover,
 .upload-button:hover {
   transform: translateY(-1px);
+}
+
+.primary-button:disabled,
+.ghost-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
 }
 
 .primary-button:hover,
@@ -416,6 +430,307 @@ select:focus {
   align-items: start;
 }
 
+.match-select-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.85rem;
+  color: #486293;
+}
+
+.match-select-label input[type="radio"] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: #356dff;
+}
+
+.planner-nav-button {
+  display: inline-flex;
+  align-items: center;
+}
+
+.roadmap-filter {
+  margin-top: 0.7rem;
+}
+
+.roadmap-filter-label {
+  font-weight: 600;
+  color: #4a6195;
+  margin-right: 0.7rem;
+}
+
+.roadmap-filter-controls {
+  display: inline-flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.45rem;
+}
+
+.roadmap-filter-controls input {
+  width: 90px;
+}
+
+.roadmap-filter-controls select {
+  width: 130px;
+}
+
+.roadmap-flow {
+  position: relative;
+  padding-left: 1.2rem;
+}
+
+.roadmap-flow::before {
+  content: "";
+  position: absolute;
+  left: 0.38rem;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(53, 109, 255, 0.35), rgba(53, 109, 255, 0.1));
+}
+
+.roadmap-flow-item {
+  position: relative;
+}
+
+.roadmap-flow-item::before {
+  content: "";
+  position: absolute;
+  left: -1.05rem;
+  top: 1.05rem;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #356dff;
+  box-shadow: 0 0 0 3px rgba(53, 109, 255, 0.2);
+}
+
+.flow-step-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #2f4b86;
+  background: rgba(53, 109, 255, 0.12);
+  border: 1px solid rgba(95, 133, 242, 0.24);
+  margin-bottom: 0.35rem;
+}
+
+.flow-empty-text {
+  color: #60719a;
+  font-weight: 600;
+}
+
+.inline-hint,
+.readiness-context-text {
+  color: #60719a;
+  margin: 0.2rem 0 0.4rem;
+}
+
+.workflow-panel {
+  margin-bottom: 1rem;
+}
+
+.workflow-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+}
+
+.workflow-step {
+  border: 1px solid rgba(95, 133, 242, 0.2);
+  border-radius: 14px;
+  padding: 0.8rem;
+  background: rgba(247, 251, 255, 0.85);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem;
+  align-items: start;
+}
+
+.workflow-step.active {
+  border-color: rgba(53, 109, 255, 0.52);
+  background: rgba(53, 109, 255, 0.1);
+}
+
+.workflow-step-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #294780;
+  background: rgba(53, 109, 255, 0.18);
+}
+
+.workflow-step p {
+  margin: 0.2rem 0 0;
+  color: #60719a;
+  font-size: 0.84rem;
+}
+
+.interview-controls {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.interview-controls label {
+  margin: 0;
+  font-weight: 600;
+  color: #4b6292;
+}
+
+.interview-controls input {
+  width: 90px;
+}
+
+.growth-planner-panel {
+  margin-top: 1.5rem;
+}
+
+.growth-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.2rem;
+}
+
+.growth-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.growth-card {
+  border: 1px solid rgba(95, 133, 242, 0.18);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1rem;
+}
+
+.habit-list,
+.study-task-list,
+.subject-progress-list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.habit-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 500;
+}
+
+.habit-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #356dff;
+}
+
+.study-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 0.8rem 0 1rem;
+}
+
+.study-form-grid .primary-button {
+  width: 100%;
+}
+
+.study-task-item {
+  border: 1px solid rgba(95, 133, 242, 0.16);
+  border-radius: 12px;
+  padding: 0.6rem 0.7rem;
+  background: rgba(247, 250, 255, 0.9);
+}
+
+.task-meta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  color: #5d709a;
+  font-size: 0.82rem;
+  margin-top: 0.4rem;
+}
+
+.compact-chart {
+  height: 220px;
+}
+
+.progress-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.progress-meta span {
+  color: #60719a;
+  display: block;
+  font-size: 0.85rem;
+}
+
+.progress-meta strong {
+  font-size: 1.15rem;
+  color: #1e3564;
+}
+
+.progress-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #dce7ff;
+  overflow: hidden;
+  margin-top: 0.3rem;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #356dff, #13b996);
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.heat-cell {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: #ebf1ff;
+}
+
+.heat-cell.level-0 {
+  background: #edf2fc;
+}
+
+.heat-cell.level-1 {
+  background: #d7e5ff;
+}
+
+.heat-cell.level-2 {
+  background: #9fc0ff;
+}
+
+.heat-cell.level-3 {
+  background: #5b8eff;
+}
+
 .chart-box {
   height: 260px;
   margin-top: 0.7rem;
@@ -442,9 +757,17 @@ select:focus {
   .metric-row,
   .dashboard-header,
   .match-card,
-  .form-grid {
+  .form-grid,
+  .growth-layout,
+  .growth-stats-grid,
+  .study-form-grid,
+  .progress-meta {
     grid-template-columns: 1fr;
     display: grid;
+  }
+
+  .workflow-steps {
+    grid-template-columns: 1fr;
   }
 
   .navbar {
@@ -469,6 +792,124 @@ select:focus {
     grid-template-columns: 1fr;
     text-align: center;
     justify-items: center;
+  }
+}
+
+/* AI Insights Panel Styles */
+.ai-insights-panel {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin-bottom: 1.5rem;
+  border: none;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+}
+
+.ai-insights-panel h3 {
+  color: white;
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+.ai-insights-content {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.insights-section,
+.suggestions-section {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.insights-section h4,
+.suggestions-section h4 {
+  color: white;
+  margin-bottom: 0.8rem;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.insights-list,
+.suggestions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.insight-item,
+.suggestion-item {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.6rem;
+  border-left: 4px solid rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  transition: all 0.3s ease;
+}
+
+.insight-item:hover,
+.suggestion-item:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateX(4px);
+}
+
+.insight-item:last-child,
+.suggestion-item:last-child {
+  margin-bottom: 0;
+}
+
+.insights-footer {
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Secondary button style for AI Insights */
+.secondary-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.secondary-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+}
+
+.secondary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .ai-insights-content {
+    gap: 1rem;
+  }
+  
+  .insights-section,
+  .suggestions-section {
+    padding: 0.8rem;
+  }
+  
+  .insight-item,
+  .suggestion-item {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
   }
 }
 

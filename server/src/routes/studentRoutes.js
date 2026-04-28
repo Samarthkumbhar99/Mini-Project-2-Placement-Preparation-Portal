@@ -1,8 +1,10 @@
 import { Router } from "express";
 import {
+  analyzeSelectedCompany,
   analyzeProfile,
   evaluateInterview,
   generateInterview,
+  getAIInsights,
   getProfile,
   getReadiness,
   getRecommendations,
@@ -19,10 +21,12 @@ router.get("/profile", getProfile);
 router.put("/profile", updateProfile);
 router.post("/resume", upload.single("resume"), uploadResume);
 router.post("/analyze", analyzeProfile);
+router.post("/company-analysis", analyzeSelectedCompany);
 router.get("/readiness", getReadiness);
 router.get("/roadmap", getRoadmap);
 router.get("/recommendations", getRecommendations);
 router.post("/interview/generate", generateInterview);
 router.post("/interview/evaluate", evaluateInterview);
+router.get("/ai-insights", getAIInsights);
 export default router;
 

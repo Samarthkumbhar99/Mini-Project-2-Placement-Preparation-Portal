@@ -35,6 +35,11 @@ export const Navbar = () => {
             Dashboard
           </NavLink>
         )}
+        {user?.role === "student" && (
+          <NavLink to="/student/growth-planner" className={navClass}>
+            Growth Planner
+          </NavLink>
+        )}
         {user?.role === "admin" && (
           <NavLink to="/admin" className={navClass}>
             Admin

@@ -9,9 +9,13 @@
   "scripts": {
     "dev:client": "npm --workspace client run dev",
     "dev:server": "npm --workspace server run dev",
+    "dev:ai": "ai-service\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --reload --port 8000 --app-dir ai-service",
+    "dev:all": "concurrently -n SERVER,CLIENT,AI -c blue,green,magenta \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:ai\"",
     "start:client": "npm --workspace client run dev",
     "start:server": "npm --workspace server run start",
     "seed": "npm --workspace server run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }
-

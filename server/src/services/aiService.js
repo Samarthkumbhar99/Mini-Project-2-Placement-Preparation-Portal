@@ -85,6 +85,9 @@ export const generateInterviewQuestions = async (payload) => {
     const { data } = await aiClient.post("/generate-interview-questions", payload);
     return data;
   } catch {
+    const requestedCount = Math.max(1, Number(payload.question_count) || 3);
+    const missingSkills = payload.missing_skills || [];
+    const roleSkills = payload.role_required_skills || [];
     return {
       questions: [
         {
@@ -96,8 +99,13 @@ export const generateInterviewQuestions = async (payload) => {
           prompt: "What is your approach to solving a data structure problem under time pressure?",
           type: "Technical",
           expected_focus: ["DSA", "problem solving"]
+        },
+        {
+          prompt: `Which ${missingSkills[0] || roleSkills[0] || "core"} skill are you improving right now, and what is your plan?`,
+          type: "Technical",
+          expected_focus: [missingSkills[0] || roleSkills[0] || "learning", "improvement plan"]
         }
-      ]
+      ].slice(0, requestedCount)
     };
   }
 };

@@ -4,6 +4,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
 import { AuthPage } from "./pages/AuthPage";
 import { StudentDashboard } from "./pages/StudentDashboard";
+import { StudentGrowthPlanner } from "./pages/StudentGrowthPlanner";
 import { AdminDashboard } from "./pages/AdminDashboard";
 
 const App = () => {
@@ -21,6 +22,14 @@ const App = () => {
           element={
             <ProtectedRoute role="student">
               <StudentDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/growth-planner"
+          element={
+            <ProtectedRoute role="student">
+              <StudentGrowthPlanner />
             </ProtectedRoute>
           }
         />

@@ -14,8 +14,49 @@ import {
   predictReadiness
 } from "../services/aiService.js";
 import { buildRoleMatches } from "../services/recommendationService.js";
+import { generateAIInsights } from "../services/aiInsightsService.js";
 
 const normalizeList = (items = []) => items.filter(Boolean).map((item) => item.trim()).filter(Boolean);
+const normalizeSkill = (skill = "") => skill.trim().toLowerCase().replace(/\s+/g, " ");
+const uniqueSkills = (skills = []) => [...new Set(skills.filter(Boolean))];
+const filterMissingSkills = (missingSkills = [], studentSkills = []) => {
+  const studentSkillSet = new Set(studentSkills.map(normalizeSkill).filter(Boolean));
+  return uniqueSkills(missingSkills).filter((skill) => !studentSkillSet.has(normalizeSkill(skill)));
+};
+const buildSelectedCompanyAnalysis = async ({ profile, selectedMatch }) => {
+  const requiredSkills = [
+    ...(selectedMatch?.matchedSkills || []),
+    ...(selectedMatch?.missingSkills || [])
+  ];
+  const gapAnalysis = await analyzeSkillGap({
+    student_skills: profile.skills,
+    required_skills: requiredSkills
+  });
+  const normalizedMissingSkills = filterMissingSkills(
+    gapAnalysis.missing_skills || selectedMatch?.missingSkills || [],
+    profile.skills || []
+  );
+  const readiness = await predictReadiness({
+    cgpa: profile.cgpa,
+    skills: profile.skills,
+    projects: profile.projects,
+    internships: profile.internships,
+    certifications: profile.certifications,
+    target_role: selectedMatch?.roleTitle || ""
+  });
+  const roadmapPayload = await generateRoadmap({
+    missing_skills: normalizedMissingSkills,
+    strengths: gapAnalysis.strengths || profile.skills.slice(0, 4),
+    target_role: selectedMatch?.roleTitle || "",
+    current_skills: profile.skills
+  });
+  return {
+    gapAnalysis,
+    normalizedMissingSkills,
+    readiness,
+    roadmapPayload
+  };
+};
 const getStudentProfile = async (userId) =>
   StudentProfile.findOne({ user: userId }).populate("user", "name email role");
 
@@ -85,27 +126,9 @@ export const analyzeProfile = async (req, res) => {
 
   const matches = buildRoleMatches(profile, roles);
   const topMatch = matches[0];
-  const combinedRequiredSkills = [
-    ...(topMatch?.matchedSkills || []),
-    ...(topMatch?.missingSkills || [])
-  ];
-  const gapAnalysis = await analyzeSkillGap({
-    student_skills: profile.skills,
-    required_skills: combinedRequiredSkills
-  });
-  const readiness = await predictReadiness({
-    cgpa: profile.cgpa,
-    skills: profile.skills,
-    projects: profile.projects,
-    internships: profile.internships,
-    certifications: profile.certifications,
-    target_role: topMatch?.roleTitle || ""
-  });
-  const roadmapPayload = await generateRoadmap({
-    missing_skills: gapAnalysis.missing_skills || topMatch?.missingSkills || [],
-    strengths: gapAnalysis.strengths || profile.skills.slice(0, 4),
-    target_role: topMatch?.roleTitle || "",
-    current_skills: profile.skills
+  const { gapAnalysis, normalizedMissingSkills, readiness, roadmapPayload } = await buildSelectedCompanyAnalysis({
+    profile,
+    selectedMatch: topMatch
   });
 
   const report = await ReadinessReport.findOneAndUpdate(
@@ -115,13 +138,26 @@ export const analyzeProfile = async (req, res) => {
       category: readiness.category,
       strengths: gapAnalysis.strengths || profile.skills.slice(0, 5),
       weaknesses: gapAnalysis.weak_skills || [],
-      missingSkills: gapAnalysis.missing_skills || [],
+      missingSkills: normalizedMissingSkills,
       recommendations: [
         "Practice aptitude and coding daily",
         "Improve one missing skill per week",
         "Refine project storytelling for interviews"
       ],
       topMatches: matches.slice(0, 5),
+      selectedCompany: topMatch
+        ? {
+            companyId: topMatch.companyId,
+            companyName: topMatch.companyName,
+            roleId: topMatch.roleId,
+            roleTitle: topMatch.roleTitle,
+            score: readiness.score,
+            category: readiness.category,
+            missingSkills: normalizedMissingSkills,
+            strengths: gapAnalysis.strengths || profile.skills.slice(0, 5),
+            selectedAt: new Date()
+          }
+        : undefined,
       generatedAt: new Date()
     },
     { upsert: true, new: true }
@@ -129,7 +165,19 @@ export const analyzeProfile = async (req, res) => {
 
   await Roadmap.findOneAndUpdate(
     { student: profile._id },
-    { items: roadmapPayload.items || [], focusAreas: roadmapPayload.focus_areas || [] },
+    {
+      items: roadmapPayload.items || [],
+      focusAreas: roadmapPayload.focus_areas || [],
+      selectedCompany: topMatch
+        ? {
+            companyId: topMatch.companyId,
+            companyName: topMatch.companyName,
+            roleId: topMatch.roleId,
+            roleTitle: topMatch.roleTitle,
+            updatedAt: new Date()
+          }
+        : undefined
+    },
     { upsert: true, new: true }
   );
 
@@ -138,6 +186,88 @@ export const analyzeProfile = async (req, res) => {
   await profile.save();
 
   res.json({ report, roadmap: roadmapPayload, matches: matches.slice(0, 5) });
+};
+
+export const analyzeSelectedCompany = async (req, res) => {
+  const profile = await getStudentProfile(req.user._id);
+  if (!profile) {
+    return res.status(404).json({ message: "Student profile not found." });
+  }
+
+  const { companyId, jobRoleId } = req.body;
+  if (!companyId || !jobRoleId) {
+    return res.status(400).json({ message: "companyId and jobRoleId are required." });
+  }
+
+  const roles = await JobRole.find().populate("company");
+  const matches = buildRoleMatches(profile, roles);
+  const selectedMatch = matches.find((match) => String(match.companyId) === String(companyId) && String(match.roleId) === String(jobRoleId));
+
+  if (!selectedMatch) {
+    return res.status(404).json({ message: "Selected company role is not available for this student profile." });
+  }
+
+  const { gapAnalysis, normalizedMissingSkills, readiness, roadmapPayload } = await buildSelectedCompanyAnalysis({
+    profile,
+    selectedMatch
+  });
+
+  const report = await ReadinessReport.findOneAndUpdate(
+    { student: profile._id },
+    {
+      score: readiness.score,
+      category: readiness.category,
+      strengths: gapAnalysis.strengths || profile.skills.slice(0, 5),
+      weaknesses: gapAnalysis.weak_skills || [],
+      missingSkills: normalizedMissingSkills,
+      recommendations: [
+        "Practice aptitude and coding daily",
+        "Improve one missing skill per week",
+        "Refine project storytelling for interviews"
+      ],
+      topMatches: matches.slice(0, 5),
+      selectedCompany: {
+        companyId: selectedMatch.companyId,
+        companyName: selectedMatch.companyName,
+        roleId: selectedMatch.roleId,
+        roleTitle: selectedMatch.roleTitle,
+        score: readiness.score,
+        category: readiness.category,
+        missingSkills: normalizedMissingSkills,
+        strengths: gapAnalysis.strengths || profile.skills.slice(0, 5),
+        selectedAt: new Date()
+      },
+      generatedAt: new Date()
+    },
+    { upsert: true, new: true }
+  );
+
+  const roadmap = await Roadmap.findOneAndUpdate(
+    { student: profile._id },
+    {
+      items: roadmapPayload.items || [],
+      focusAreas: roadmapPayload.focus_areas || [],
+      selectedCompany: {
+        companyId: selectedMatch.companyId,
+        companyName: selectedMatch.companyName,
+        roleId: selectedMatch.roleId,
+        roleTitle: selectedMatch.roleTitle,
+        updatedAt: new Date()
+      }
+    },
+    { upsert: true, new: true }
+  );
+
+  profile.strengths = report.strengths;
+  profile.weaknesses = report.weaknesses;
+  await profile.save();
+
+  res.json({
+    report,
+    roadmap,
+    selectedCompany: report.selectedCompany,
+    selectedMatch
+  });
 };
 
 export const getReadiness = async (req, res) => {
@@ -160,18 +290,29 @@ export const getRecommendations = async (req, res) => {
 
 export const generateInterview = async (req, res) => {
   const profile = await getStudentProfile(req.user._id);
-  const { companyId, jobRoleId } = req.body;
+  const { companyId, jobRoleId, questionCount } = req.body;
   const company = await Company.findById(companyId);
   const role = await JobRole.findById(jobRoleId);
+  const report = await ReadinessReport.findOne({ student: profile._id });
 
   if (!company || !role) {
     return res.status(404).json({ message: "Company or role not found." });
   }
+  if (
+    !report?.selectedCompany?.companyId ||
+    String(report.selectedCompany.companyId) !== String(companyId) ||
+    String(report.selectedCompany.roleId) !== String(jobRoleId)
+  ) {
+    return res.status(400).json({ message: "Select and analyze a company roadmap first before generating interview questions." });
+  }
 
   const generated = await generateInterviewQuestions({
     student_skills: profile.skills,
+    missing_skills: report?.selectedCompany?.missingSkills || [],
+    role_required_skills: role.requiredSkills || [],
     company_name: company.name,
-    job_role: role.title
+    job_role: role.title,
+    question_count: Math.max(1, Math.min(15, Number(questionCount) || 3))
   });
 
   const session = await InterviewSession.create({
@@ -222,5 +363,19 @@ export const evaluateInterview = async (req, res) => {
   session.improvementTips = [...new Set(tips)].slice(0, 5);
   await session.save();
   res.json(session);
+};
+
+export const getAIInsights = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const insights = await generateAIInsights(userId);
+    res.json(insights);
+  } catch (error) {
+    console.error("Error getting AI insights:", error);
+    res.status(500).json({ 
+      error: "Failed to generate insights",
+      message: error.message 
+    });
+  }
 };
 

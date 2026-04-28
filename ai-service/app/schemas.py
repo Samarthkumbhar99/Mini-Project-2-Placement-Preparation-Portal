@@ -29,8 +29,11 @@ class RoadmapPayload(BaseModel):
 
 class InterviewGeneratePayload(BaseModel):
     student_skills: list[str] = Field(default_factory=list)
+    missing_skills: list[str] = Field(default_factory=list)
+    role_required_skills: list[str] = Field(default_factory=list)
     company_name: str = ""
     job_role: str = ""
+    question_count: int = 3
 
 
 class InterviewEvaluatePayload(BaseModel):

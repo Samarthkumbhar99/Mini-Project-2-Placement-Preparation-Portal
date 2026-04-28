@@ -15,7 +15,14 @@ const roadmapSchema = new mongoose.Schema(
   {
     student: { type: mongoose.Schema.Types.ObjectId, ref: "StudentProfile", required: true, unique: true },
     items: { type: [roadmapItemSchema], default: [] },
-    focusAreas: { type: [String], default: [] }
+    focusAreas: { type: [String], default: [] },
+    selectedCompany: {
+      companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", default: null },
+      companyName: { type: String, default: "" },
+      roleId: { type: mongoose.Schema.Types.ObjectId, ref: "JobRole", default: null },
+      roleTitle: { type: String, default: "" },
+      updatedAt: { type: Date, default: null }
+    }
   },
   { timestamps: true }
 );

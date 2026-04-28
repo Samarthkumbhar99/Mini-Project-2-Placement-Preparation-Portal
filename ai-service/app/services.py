@@ -138,7 +138,11 @@ def generate_interview_questions(payload: dict) -> dict:
     role = payload.get("job_role", "the role")
     company = payload.get("company_name", "the company")
     student_skills = payload.get("student_skills", [])
+    missing_skills = payload.get("missing_skills", [])
+    role_required_skills = payload.get("role_required_skills", [])
+    question_count = max(1, min(15, int(payload.get("question_count", 3) or 3)))
     top_skills = student_skills[:2] or ["Problem Solving", "Communication"]
+    top_missing = missing_skills[:2]
 
     questions = [
         {
@@ -156,8 +160,18 @@ def generate_interview_questions(payload: dict) -> dict:
             "type": "HR",
             "expected_focus": ["ownership", "learning", "planning"],
         },
+        {
+            "prompt": f"Pick one missing skill ({top_missing[0] if top_missing else role_required_skills[0] if role_required_skills else 'core skill'}) and describe how you will reach interview readiness.",
+            "type": "Technical",
+            "expected_focus": [top_missing[0] if top_missing else "upskilling", "roadmap", "execution"],
+        },
+        {
+            "prompt": f"Which project best proves your {top_skills[1] if len(top_skills) > 1 else top_skills[0]} for {role} and what measurable impact did it have?",
+            "type": "Technical",
+            "expected_focus": [top_skills[1] if len(top_skills) > 1 else top_skills[0], "impact", "ownership"],
+        },
     ]
-    return {"questions": questions}
+    return {"questions": questions[:question_count]}
 
 
 def evaluate_interview_answer(payload: dict) -> dict:

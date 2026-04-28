@@ -1,11 +1,13 @@
+const normalizeSkill = (skill = "") => skill.trim().toLowerCase().replace(/\s+/g, " ");
+
 export const buildRoleMatches = (profile, roles) => {
-  const studentSkills = new Set((profile.skills || []).map((skill) => skill.toLowerCase()));
+  const studentSkills = new Set((profile.skills || []).map(normalizeSkill).filter(Boolean));
 
   return roles
     .map((role) => {
       const requiredSkills = role.requiredSkills || [];
-      const matchedSkills = requiredSkills.filter((skill) => studentSkills.has(skill.toLowerCase()));
-      const missingSkills = requiredSkills.filter((skill) => !studentSkills.has(skill.toLowerCase()));
+      const matchedSkills = requiredSkills.filter((skill) => studentSkills.has(normalizeSkill(skill)));
+      const missingSkills = requiredSkills.filter((skill) => !studentSkills.has(normalizeSkill(skill)));
       const matchPercentage = requiredSkills.length
         ? Math.round((matchedSkills.length / requiredSkills.length) * 100)
         : 0;
