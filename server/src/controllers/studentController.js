@@ -15,6 +15,14 @@ import {
 } from "../services/aiService.js";
 import { buildRoleMatches } from "../services/recommendationService.js";
 import { generateAIInsights } from "../services/aiInsightsService.js";
+import {
+  createGoal,
+  getStudentGoals,
+  updateGoalProgress,
+  deleteGoal,
+  getGoalAnalytics,
+  checkGoalAlerts
+} from "../services/goalService.js";
 
 const normalizeList = (items = []) => items.filter(Boolean).map((item) => item.trim()).filter(Boolean);
 const normalizeSkill = (skill = "") => skill.trim().toLowerCase().replace(/\s+/g, " ");
@@ -374,6 +382,91 @@ export const getAIInsights = async (req, res) => {
     console.error("Error getting AI insights:", error);
     res.status(500).json({ 
       error: "Failed to generate insights",
+      message: error.message 
+    });
+  }
+};
+
+export const createStudentGoal = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const goal = await createGoal(req.body, userId);
+    res.json(goal);
+  } catch (error) {
+    console.error("Error creating goal:", error);
+    res.status(500).json({ 
+      error: "Failed to create goal",
+      message: error.message 
+    });
+  }
+};
+
+export const getStudentGoalsList = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const goals = await getStudentGoals(userId);
+    res.json(goals);
+  } catch (error) {
+    console.error("Error fetching goals:", error);
+    res.status(500).json({ 
+      error: "Failed to fetch goals",
+      message: error.message 
+    });
+  }
+};
+
+export const updateGoal = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const goal = await updateGoalProgress(goalId, req.body);
+    res.json(goal);
+  } catch (error) {
+    console.error("Error updating goal:", error);
+    res.status(500).json({ 
+      error: "Failed to update goal",
+      message: error.message 
+    });
+  }
+};
+
+export const removeGoal = async (req, res) => {
+  try {
+    const { goalId } = req.params;
+    const userId = req.user.id;
+    const result = await deleteGoal(goalId, userId);
+    res.json(result);
+  } catch (error) {
+    console.error("Error deleting goal:", error);
+    res.status(500).json({ 
+      error: "Failed to delete goal",
+      message: error.message 
+    });
+  }
+};
+
+export const getGoalsAnalytics = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const analytics = await getGoalAnalytics(userId);
+    res.json(analytics);
+  } catch (error) {
+    console.error("Error fetching goal analytics:", error);
+    res.status(500).json({ 
+      error: "Failed to fetch analytics",
+      message: error.message 
+    });
+  }
+};
+
+export const getGoalAlerts = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const alerts = await checkGoalAlerts(userId);
+    res.json(alerts);
+  } catch (error) {
+    console.error("Error checking goal alerts:", error);
+    res.status(500).json({ 
+      error: "Failed to check alerts",
       message: error.message 
     });
   }

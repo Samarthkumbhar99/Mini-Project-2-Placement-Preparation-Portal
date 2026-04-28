@@ -5,6 +5,12 @@ import {
   evaluateInterview,
   generateInterview,
   getAIInsights,
+  createStudentGoal,
+  getStudentGoalsList,
+  updateGoal,
+  removeGoal,
+  getGoalsAnalytics,
+  getGoalAlerts,
   getProfile,
   getReadiness,
   getRecommendations,
@@ -28,5 +34,11 @@ router.get("/recommendations", getRecommendations);
 router.post("/interview/generate", generateInterview);
 router.post("/interview/evaluate", evaluateInterview);
 router.get("/ai-insights", getAIInsights);
+router.post("/goals", createStudentGoal);
+router.get("/goals", getStudentGoalsList);
+router.put("/goals/:goalId", updateGoal);
+router.delete("/goals/:goalId", removeGoal);
+router.get("/goals/analytics", getGoalsAnalytics);
+router.get("/goals/alerts", getGoalAlerts);
 export default router;
 

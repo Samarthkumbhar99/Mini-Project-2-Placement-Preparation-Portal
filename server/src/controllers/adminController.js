@@ -1,7 +1,8 @@
 import { Company } from "../models/Company.js";
+import { InterviewSession } from "../models/InterviewSession.js";
 import { JobRole } from "../models/JobRole.js";
-import { StudentProfile } from "../models/StudentProfile.js";
 import { ReadinessReport } from "../models/ReadinessReport.js";
+import { StudentProfile } from "../models/StudentProfile.js";
 import { buildAnalytics } from "../services/analyticsService.js";
 
 export const getCompanies = async (_req, res) => {
@@ -26,8 +27,48 @@ export const createJobRole = async (req, res) => {
 };
 
 export const getStudents = async (_req, res) => {
-  const students = await StudentProfile.find().populate("user", "name email");
-  res.json(students);
+  const [students, reports, interviews] = await Promise.all([
+    StudentProfile.find().populate("user", "name email"),
+    ReadinessReport.find(),
+    InterviewSession.find().sort({ updatedAt: -1 })
+  ]);
+
+  const reportMap = new Map(reports.map((report) => [String(report.student), report]));
+  const latestInterviewMap = new Map();
+
+  interviews.forEach((session) => {
+    const studentId = String(session.student);
+    if (!latestInterviewMap.has(studentId)) {
+      latestInterviewMap.set(studentId, session);
+    }
+  });
+
+  const studentSummaries = students.map((student) => {
+    const readiness = reportMap.get(String(student._id));
+    const latestInterview = latestInterviewMap.get(String(student._id));
+
+    return {
+      ...student.toObject(),
+      readiness: readiness
+        ? {
+            score: readiness.score,
+            category: readiness.category,
+            missingSkills: readiness.missingSkills || [],
+            strengths: readiness.strengths || [],
+            selectedCompany: readiness.selectedCompany || null,
+            generatedAt: readiness.generatedAt
+          }
+        : null,
+      latestInterview: latestInterview
+        ? {
+            overallScore: latestInterview.overallScore,
+            updatedAt: latestInterview.updatedAt
+          }
+        : null
+    };
+  });
+
+  res.json(studentSummaries);
 };
 
 export const getAnalytics = async (_req, res) => {
@@ -39,4 +80,3 @@ export const getAnalytics = async (_req, res) => {
   ]);
   res.json(buildAnalytics({ students, reports, companies, roles }));
 };
-

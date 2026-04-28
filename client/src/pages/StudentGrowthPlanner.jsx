@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { api } from "../services/api";
 
 const initialDailyHabits = [
   { id: "dh-1", label: "Revise DSA concepts", done: true },
@@ -51,6 +52,20 @@ export const StudentGrowthPlanner = () => {
     priority: "Medium",
     hours: 1
   });
+  const [goals, setGoals] = useState([]);
+  const [goalForm, setGoalForm] = useState({
+    title: "",
+    description: "",
+    goalType: "time_based",
+    targetValue: "",
+    unit: "hours",
+    deadline: "",
+    priority: "Medium",
+    category: "Study"
+  });
+  const [showGoalForm, setShowGoalForm] = useState(false);
+  const [goalAlerts, setGoalAlerts] = useState([]);
+  const [isLoadingGoals, setIsLoadingGoals] = useState(false);
 
   const handleHabitToggle = (habitType, habitId) => {
     if (habitType === "daily") {
@@ -82,6 +97,78 @@ export const StudentGrowthPlanner = () => {
     ]);
     setStudyForm({ subject: "", task: "", deadline: "", priority: "Medium", hours: 1 });
   };
+
+  // Goal management functions
+  const loadGoals = async () => {
+    setIsLoadingGoals(true);
+    try {
+      const { data } = await api.get("/student/goals");
+      setGoals(data);
+    } catch (error) {
+      console.error("Failed to load goals:", error);
+    } finally {
+      setIsLoadingGoals(false);
+    }
+  };
+
+  const loadGoalAlerts = async () => {
+    try {
+      const { data } = await api.get("/student/goals/alerts");
+      setGoalAlerts(data);
+    } catch (error) {
+      console.error("Failed to load goal alerts:", error);
+    }
+  };
+
+  const handleGoalCreate = async (event) => {
+    event.preventDefault();
+    if (!goalForm.title.trim() || !goalForm.targetValue || !goalForm.deadline) return;
+
+    try {
+      const { data } = await api.post("/student/goals", {
+        ...goalForm,
+        targetValue: Number(goalForm.targetValue),
+        startDate: new Date().toISOString()
+      });
+      setGoals([data, ...goals]);
+      setGoalForm({
+        title: "",
+        description: "",
+        goalType: "time_based",
+        targetValue: "",
+        unit: "hours",
+        deadline: "",
+        priority: "Medium",
+        category: "Study"
+      });
+      setShowGoalForm(false);
+    } catch (error) {
+      console.error("Failed to create goal:", error);
+    }
+  };
+
+  const handleGoalDelete = async (goalId) => {
+    try {
+      await api.delete(`/student/goals/${goalId}`);
+      setGoals(goals.filter(goal => goal._id !== goalId));
+    } catch (error) {
+      console.error("Failed to delete goal:", error);
+    }
+  };
+
+  const handleGoalProgressUpdate = async (goalId, currentValue) => {
+    try {
+      const { data } = await api.put(`/student/goals/${goalId}`, { currentValue });
+      setGoals(goals.map(goal => goal._id === goalId ? data : goal));
+    } catch (error) {
+      console.error("Failed to update goal progress:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadGoals();
+    loadGoalAlerts();
+  }, []);
 
   const totalHabits = dailyHabits.length + weeklyHabits.length;
   const completedHabits = [...dailyHabits, ...weeklyHabits].filter((habit) => habit.done).length;
@@ -222,6 +309,200 @@ export const StudentGrowthPlanner = () => {
                   </div>
                 </article>
               ))}
+            </div>
+          </section>
+        </div>
+
+        {/* Goals Section */}
+        <div className="growth-layout">
+          <section className="growth-card">
+            <div className="section-row">
+              <h3>🎯 Smart Goals</h3>
+              <button 
+                type="button" 
+                className="primary-button" 
+                onClick={() => setShowGoalForm(!showGoalForm)}
+              >
+                {showGoalForm ? "Cancel" : "Create Goal"}
+              </button>
+            </div>
+
+            {/* Goal Alerts */}
+            {goalAlerts.length > 0 && (
+              <div className="goal-alerts">
+                {goalAlerts.map((alert, index) => (
+                  <div key={index} className={`alert alert-${alert.severity}`}>
+                    <span>⚠️ {alert.message}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Goal Creation Form */}
+            {showGoalForm && (
+              <form className="goal-form" onSubmit={handleGoalCreate}>
+                <div className="form-grid">
+                  <input
+                    type="text"
+                    placeholder="Goal title (e.g., Complete DSA in 30 days)"
+                    value={goalForm.title}
+                    onChange={(event) => setGoalForm({ ...goalForm, title: event.target.value })}
+                    required
+                  />
+                  <textarea
+                    placeholder="Description (optional)"
+                    value={goalForm.description}
+                    onChange={(event) => setGoalForm({ ...goalForm, description: event.target.value })}
+                    rows="2"
+                  />
+                  <div className="form-row">
+                    <select
+                      value={goalForm.goalType}
+                      onChange={(event) => setGoalForm({ ...goalForm, goalType: event.target.value })}
+                    >
+                      <option value="time_based">Time Based</option>
+                      <option value="task_based">Task Based</option>
+                      <option value="skill_based">Skill Based</option>
+                    </select>
+                    <input
+                      type="number"
+                      placeholder="Target value"
+                      value={goalForm.targetValue}
+                      onChange={(event) => setGoalForm({ ...goalForm, targetValue: event.target.value })}
+                      min="1"
+                      required
+                    />
+                    <select
+                      value={goalForm.unit}
+                      onChange={(event) => setGoalForm({ ...goalForm, unit: event.target.value })}
+                    >
+                      <option value="hours">Hours</option>
+                      <option value="days">Days</option>
+                      <option value="tasks">Tasks</option>
+                      <option value="problems">Problems</option>
+                    </select>
+                  </div>
+                  <div className="form-row">
+                    <input
+                      type="date"
+                      value={goalForm.deadline}
+                      onChange={(event) => setGoalForm({ ...goalForm, deadline: event.target.value })}
+                      min={new Date().toISOString().split('T')[0]}
+                      required
+                    />
+                    <select
+                      value={goalForm.priority}
+                      onChange={(event) => setGoalForm({ ...goalForm, priority: event.target.value })}
+                    >
+                      <option value="High">High Priority</option>
+                      <option value="Medium">Medium Priority</option>
+                      <option value="Low">Low Priority</option>
+                    </select>
+                    <select
+                      value={goalForm.category}
+                      onChange={(event) => setGoalForm({ ...goalForm, category: event.target.value })}
+                    >
+                      <option value="Study">Study</option>
+                      <option value="DSA">DSA</option>
+                      <option value="Aptitude">Aptitude</option>
+                      <option value="Projects">Projects</option>
+                      <option value="Interview">Interview</option>
+                    </select>
+                  </div>
+                  <button type="submit" className="primary-button">Create Goal</button>
+                </div>
+              </form>
+            )}
+
+            {/* Goals List */}
+            <div className="goals-list">
+              {isLoadingGoals ? (
+                <div className="loading-text">Loading goals...</div>
+              ) : goals.length === 0 ? (
+                <div className="empty-state">
+                  <p>No goals yet. Create your first goal to get started!</p>
+                </div>
+              ) : (
+                goals.map((goal) => (
+                  <article key={goal._id} className="goal-item">
+                    <div className="goal-header">
+                      <div className="goal-info">
+                        <h4>{goal.title}</h4>
+                        <div className="goal-meta">
+                          <span className={`tag ${goal.priority === "High" ? "warning" : goal.priority === "Low" ? "positive" : ""}`}>
+                            {goal.priority}
+                          </span>
+                          <span className="tag category-tag">{goal.category}</span>
+                          <span className="deadline-tag">
+                            📅 {new Date(goal.deadline).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <button 
+                        type="button" 
+                        className="ghost-button delete-button"
+                        onClick={() => handleGoalDelete(goal._id)}
+                      >
+                        🗑️
+                      </button>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="goal-progress">
+                      <div className="progress-info">
+                        <span>{goal.currentValue} / {goal.targetValue} {goal.unit}</span>
+                        <span>{goal.progress}%</span>
+                      </div>
+                      <div className="progress-track">
+                        <div 
+                          className={`progress-fill ${!goal.isOnTrack ? 'behind' : ''}`}
+                          style={{ width: `${goal.progress}%` }}
+                        />
+                      </div>
+                      {!goal.isOnTrack && (
+                        <div className="behind-warning">
+                          ⚠️ Falling behind schedule
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Milestones */}
+                    <div className="milestones">
+                      <h5>🎯 Milestones</h5>
+                      <div className="milestone-list">
+                        {goal.milestones.map((milestone, index) => (
+                          <div key={index} className={`milestone ${milestone.completed ? 'completed' : ''}`}>
+                            <div className="milestone-info">
+                              <span className="milestone-title">{milestone.title}</span>
+                              <span className="milestone-progress">
+                                {milestone.currentValue} / {milestone.targetValue}
+                              </span>
+                            </div>
+                            <div className="milestone-status">
+                              {milestone.completed ? '✅' : '⏳'}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Quick Progress Update */}
+                    <div className="quick-progress">
+                      <label>Quick Update:</label>
+                      <div className="progress-input">
+                        <input
+                          type="number"
+                          min="0"
+                          max={goal.targetValue}
+                          value={goal.currentValue}
+                          onChange={(event) => handleGoalProgressUpdate(goal._id, Number(event.target.value))}
+                        />
+                        <span>{goal.unit}</span>
+                      </div>
+                    </div>
+                  </article>
+                ))
+              )}
             </div>
           </section>
         </div>
